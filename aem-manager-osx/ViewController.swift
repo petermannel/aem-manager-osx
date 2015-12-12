@@ -65,7 +65,7 @@ class ViewController: NSViewController {
                 
                 let stopInstanceMenuItem = InstanceMenuItem(t: "Stop Instance", a: "stopInstance2:", k: "",instance: instance)
                 menu.addItem(stopInstanceMenuItem)
-
+                
                 menu.addItem(NSMenuItem.separatorItem())
                 
                 let openAuthorMenuItem = InstanceMenuItem(t: "Open Author/Publish", a: "openAuthor2:", k: "",instance: instance)
@@ -83,6 +83,15 @@ class ViewController: NSViewController {
                 let openFelixConsole = InstanceMenuItem(t: "Open Felix Console", a: "openFelixConsole2:", k: "",instance: instance)
                 menu.addItem(openFelixConsole)
                 
+                menu.addItem(NSMenuItem.separatorItem())
+                
+                let eLog = InstanceMenuItem(t: "Error Log", a: "openErrorLog2:", k: "",instance: instance)
+                menu.addItem(eLog)
+                
+                let rLog = InstanceMenuItem(t: "Request Log", a: "openRequestLog2:", k: "",instance: instance)
+                menu.addItem(rLog)
+                
+                
                 statusBarItem.menu = menu
                 
             }
@@ -93,6 +102,7 @@ class ViewController: NSViewController {
     
     override var representedObject: AnyObject? {
         didSet {
+            
             // Update the view, if already loaded.
         }
     }
@@ -218,7 +228,7 @@ class ViewController: NSViewController {
         
     }
     func openFuncCRX(instace: AEMInstance){
-        var url = AEMInstance.getUrlWithContextPath(selectedInstance!)
+        var url = AEMInstance.getUrlWithContextPath(instace)
         url.appendContentsOf("/crx/explorer/")
         if(selectedInstance?.type != AEMInstance.defaultType){
             url = AEMInstance.getUrl(instace)
@@ -295,6 +305,7 @@ class ViewController: NSViewController {
         url.appendContentsOf("/system/console")
         if let openUrl = NSURL(string: url){
             NSWorkspace.sharedWorkspace().openURL(openUrl)
+            
         }
     }
     
@@ -305,6 +316,49 @@ class ViewController: NSViewController {
     func reloadTableData(notification: NSNotification){
         instances = AEMInstance.loadAEMInstances()
         table.reloadData()
+    }
+    
+    @IBAction func openErrorLog(sender: NSMenuItem) {
+        if table.selectedRow < 0 {
+            performSegueWithIdentifier("noInstance",sender: self)
+        }else{
+            openErrorLogFunc(selectedInstance!)
+        }
+    }
+    
+    func openErrorLog2(sender: InstanceMenuItem) {
+        print("open Error Log")
+        openErrorLogFunc(sender.ins)
+    }
+    
+    func openErrorLogFunc(instance: AEMInstance){
+        openLogFile(instance, log: "error.log")
+    }
+    
+    func openLogFile(instance:AEMInstance, log: String){
+        var url = AEMInstance.getLogBaseFolder(instance)
+        url.appendContentsOf(log)
+        
+        let fileManager = NSFileManager.defaultManager()
+        if fileManager.fileExistsAtPath(url){
+            NSWorkspace.sharedWorkspace().openFile(url)
+        }
+    }
+    
+    @IBAction func openRequestLog(sender: NSMenuItem) {
+        if table.selectedRow < 0 {
+            performSegueWithIdentifier("noInstance",sender: self)
+        }else{
+            openRequestLogFunc(selectedInstance!)
+        }
+    }
+    
+    func openRequestLog2(sender: InstanceMenuItem) {
+        openRequestLogFunc(sender.ins)
+    }
+    
+    func openRequestLogFunc(instance: AEMInstance){
+        openLogFile(instance, log: "request.log")
     }
     
 }
@@ -323,7 +377,7 @@ extension ViewController: NSTableViewDataSource , NSTableViewDelegate {
             case "name": return instances[row].name
             case "path": return instances[row].path
             case "type": return instances[row].type
-           /* case "status":
+                /* case "status":
                 let status = instances[row].status
                 switch status {
                 case .Running: return "Running"
