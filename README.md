@@ -1,3 +1,5 @@
+This Project moved to https://github.com/wcm-io-devops/aem-manager-osx
+
 AEM Manager
 ==================
 
